@@ -46,6 +46,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
@@ -57,13 +58,13 @@ sky.scale.setScalar(10000);
 scene.add(sky);
 
 const skyUniforms = sky.material.uniforms;
-skyUniforms['turbidity'].value = 10;
-skyUniforms['rayleigh'].value = 3;
+skyUniforms['turbidity'].value = 2;
+skyUniforms['rayleigh'].value = 1;
 skyUniforms['mieCoefficient'].value = 0.005;
-skyUniforms['mieDirectionalG'].value = 0.7;
+skyUniforms['mieDirectionalG'].value = 0.8;
 
 const sunPosition = new THREE.Vector3();
-const phi = THREE.MathUtils.degToRad(90 - 35);
+const phi = THREE.MathUtils.degToRad(90 - 45);
 const theta = THREE.MathUtils.degToRad(180);
 sunPosition.setFromSphericalCoords(1, phi, theta);
 skyUniforms['sunPosition'].value.copy(sunPosition);
@@ -75,8 +76,6 @@ const envRenderTarget = pmremGenerator.fromScene(scene);
 scene.environment = envRenderTarget.texture;
 scene.background = envRenderTarget.texture;
 pmremGenerator.dispose();
-
-renderer.toneMappingExposure = 0.5;
 
 const camera = new THREE.PerspectiveCamera(
   60, window.innerWidth / window.innerHeight, 0.5, 500
