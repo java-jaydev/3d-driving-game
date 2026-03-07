@@ -73,9 +73,10 @@ const pmremGenerator = new THREE.PMREMGenerator(renderer);
 pmremGenerator.compileEquirectangularShader();
 const envRenderTarget = pmremGenerator.fromScene(scene);
 scene.environment = envRenderTarget.texture;
+scene.background = envRenderTarget.texture;
 pmremGenerator.dispose();
 
-renderer.toneMappingExposure = 0.8;
+renderer.toneMappingExposure = 0.5;
 
 const camera = new THREE.PerspectiveCamera(
   60, window.innerWidth / window.innerHeight, 0.5, 500
@@ -90,9 +91,9 @@ const bloomPass = new UnrealBloomPass(
     Math.floor(window.innerWidth / 2),
     Math.floor(window.innerHeight / 2)
   ),
-  0.2,   // strength
-  0.4,   // radius
-  0.9    // threshold
+  0.15,  // strength
+  0.3,   // radius
+  0.95   // threshold
 );
 composer.addPass(bloomPass);
 composer.addPass(new OutputPass());
