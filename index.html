@@ -9,11 +9,51 @@
     body { overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
     canvas { display: block; }
 
+    /* 로그인 오버레이 */
+    #login-screen {
+      position: fixed; inset: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 200;
+    }
+    #login-screen h1 {
+      color: #fff; font-size: 2.8rem; margin-bottom: 0.5rem;
+      text-shadow: 2px 2px 12px rgba(0,0,0,0.5);
+    }
+    #login-screen p {
+      color: rgba(255,255,255,0.6); font-size: 0.95rem; margin-bottom: 2rem;
+    }
+    .login-form {
+      display: flex; flex-direction: column; gap: 0.8rem;
+      width: 280px;
+    }
+    .login-form input {
+      padding: 0.8rem 1rem; border-radius: 12px;
+      border: 2px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.1);
+      color: #fff; font-size: 1rem; outline: none;
+      transition: border-color 0.2s;
+    }
+    .login-form input::placeholder { color: rgba(255,255,255,0.4); }
+    .login-form input:focus { border-color: rgba(255,255,255,0.5); }
+    .login-form button {
+      padding: 0.8rem; border-radius: 12px;
+      border: none; background: #e94560; color: #fff;
+      font-size: 1.1rem; font-weight: 700; cursor: pointer;
+      transition: background 0.2s;
+    }
+    .login-form button:hover { background: #c73651; }
+    .login-error {
+      color: #ff6b6b; font-size: 0.85rem; text-align: center;
+      min-height: 1.2rem;
+    }
+
     /* 맵 선택 오버레이 */
     #map-select {
       position: fixed; inset: 0;
       background: linear-gradient(135deg, #0f9b8e 0%, #208b6c 50%, #1a6b4a 100%);
-      display: flex; flex-direction: column;
+      display: none; flex-direction: column;
       align-items: center; justify-content: center;
       z-index: 100;
     }
@@ -119,6 +159,18 @@
   </style>
 </head>
 <body>
+  <!-- 로그인 UI -->
+  <div id="login-screen">
+    <h1>은준이의 놀이터</h1>
+    <p>로그인하고 놀아보세요!</p>
+    <div class="login-form">
+      <input type="text" id="login-id" placeholder="아이디" autocomplete="off" />
+      <input type="password" id="login-pw" placeholder="비밀번호" />
+      <button id="login-btn">입장하기</button>
+      <div class="login-error" id="login-error"></div>
+    </div>
+  </div>
+
   <!-- 맵 선택 UI -->
   <div id="map-select">
     <h1>어디서 달려볼까요?</h1>

@@ -8,6 +8,32 @@ import { createControls } from './controls.js';
 import { createChaseCamera } from './camera.js';
 import { createMinimap } from './minimap.js';
 
+// 로그인
+const loginScreen = document.getElementById('login-screen');
+const loginBtn = document.getElementById('login-btn');
+const loginId = document.getElementById('login-id');
+const loginPw = document.getElementById('login-pw');
+const loginError = document.getElementById('login-error');
+
+async function hashCredentials(id, pw) {
+  const data = new TextEncoder().encode(`${id}:${pw}`);
+  const buf = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function handleLogin() {
+  const hash = await hashCredentials(loginId.value, loginPw.value);
+  if (hash === __AUTH_HASH__) {
+    loginScreen.style.display = 'none';
+    document.getElementById('map-select').style.display = 'flex';
+  } else {
+    loginError.textContent = '아이디 또는 비밀번호가 틀렸어요!';
+  }
+}
+
+loginBtn.addEventListener('click', handleLogin);
+loginPw.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLogin(); });
+
 // Three.js 기본 설정
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
