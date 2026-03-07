@@ -54,15 +54,6 @@ export function createControls() {
         vehicle.setBrake(brake, i);
       }
 
-      // 속도 제한 (100 km/h)
-      const maxSpeed = 100 / 3.6;
-      const v = vehicleData.chassisBody.velocity;
-      const speed = Math.sqrt(v.x * v.x + v.z * v.z);
-      if (speed > maxSpeed) {
-        const factor = maxSpeed / speed;
-        v.x *= factor;
-        v.z *= factor;
-      }
     },
   };
 }
