@@ -17,7 +17,7 @@ export async function createVehicle(scene, world, vehicleId, spawnPos = { x: 0, 
 
   // GLB 로딩
   const loader = new GLTFLoader();
-  const gltf = await loader.loadAsync(`/glb/${vehicleId}.glb`);
+  const gltf = await loader.loadAsync(`${import.meta.env.BASE_URL}glb/${vehicleId}.glb`);
   const model = gltf.scene;
 
   // 바운딩 박스로 크기 계산
