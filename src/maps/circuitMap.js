@@ -103,11 +103,21 @@ export function createCircuitMap(scene, world) {
   // ── 경계벽 ──
   createBoundaryWalls(tracker, bounds);
 
+  // 체크포인트 & 결승선 데이터
+  const checkpoints = [
+    { x: 160, z: -30, radius: 12 },  // CP1: 헤어핀 출구
+    { x: -30, z: 95, radius: 12 },   // CP2: 긴 커브 끝
+    { x: -180, z: -40, radius: 12 }, // CP3: 시케인
+  ];
+  const finishLine = { x: -30, zMin: -88, zMax: -72 };
+
   return {
     cleanup: () => tracker.cleanup(),
     spawnPosition: { x: -40, y: 2, z: -80 },
     spawnRotation: -Math.PI / 2,
     bounds,
+    checkpoints,
+    finishLine,
     renderMinimapBackground(bgCtx, mapPx) {
       // 잔디 배경
       bgCtx.fillStyle = '#3a6c3f';

@@ -156,6 +156,32 @@
       cursor: pointer;
     }
     .top-btn:hover { background: rgba(0,0,0,0.7); }
+
+    /* 드리프트 HUD */
+    #drift-hud {
+      display: none; position: fixed; bottom: 6rem; left: 2rem;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+      border-radius: 12px; padding: 0.8rem 1rem;
+      color: #fff; z-index: 50; min-width: 140px;
+      transition: opacity 0.3s;
+    }
+    #drift-hud.active { border: 2px solid #ff6600; }
+    #drift-hud .drift-current { font-size: 1.8rem; font-weight: 700; color: #ff6600; }
+    #drift-hud .drift-combo { font-size: 1.1rem; color: #ffcc00; margin-top: 0.2rem; }
+    #drift-hud .drift-total { font-size: 0.85rem; opacity: 0.7; margin-top: 0.3rem; }
+
+    /* 랩 타임 HUD */
+    #lap-hud {
+      display: none; position: fixed; top: 1rem; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+      border-radius: 12px; padding: 0.6rem 1.5rem;
+      color: #fff; z-index: 50; text-align: center;
+      min-width: 220px;
+    }
+    #lap-hud .lap-time { font-size: 1.8rem; font-weight: 700; font-family: 'Courier New', monospace; }
+    #lap-hud .lap-best { font-size: 0.9rem; color: #44ff44; margin-top: 0.2rem; }
+    #lap-hud .lap-count { font-size: 0.8rem; opacity: 0.7; margin-top: 0.2rem; }
   </style>
 </head>
 <body>
@@ -244,10 +270,25 @@
     <div class="vehicle-name" id="hud-vehicle-name"></div>
   </div>
 
+  <!-- 드리프트 HUD -->
+  <div id="drift-hud">
+    <div class="drift-current" id="drift-score">0</div>
+    <div class="drift-combo" id="drift-combo"></div>
+    <div class="drift-total">총점: <span id="drift-total">0</span></div>
+  </div>
+
+  <!-- 랩 타임 HUD -->
+  <div id="lap-hud">
+    <div class="lap-time" id="lap-time">0:00.000</div>
+    <div class="lap-best" id="lap-best"></div>
+    <div class="lap-count" id="lap-count">LAP 0</div>
+  </div>
+
   <!-- 상단 버튼 그룹 -->
   <div class="top-buttons" id="top-buttons">
     <button class="top-btn" id="btn-change-map">🗺️ 맵 변경</button>
     <button class="top-btn" id="btn-change">🔄 차량 변경</button>
+    <button class="top-btn" id="btn-sound">🔇 소리</button>
   </div>
 
   <!-- 조작 안내 -->

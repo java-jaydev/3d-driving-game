@@ -7,6 +7,10 @@ import { createVehicle } from './vehicle.js';
 import { createControls } from './controls.js';
 import { createChaseCamera } from './camera.js';
 import { createMinimap } from './minimap.js';
+import { createDriftScore } from './driftScore.js';
+import { createSoundSystem } from './sound.js';
+import { createLapTimer } from './lapTimer.js';
+import { createNPCTraffic } from './npcTraffic.js';
 
 // 로그인
 const loginScreen = document.getElementById('login-screen');
@@ -90,7 +94,11 @@ let chaseCamera = null;
 const controls = createControls();
 const clock = new THREE.Clock();
 let gameRunning = false;
+let lapTimer = null;
+let npcTraffic = null;
 const minimap = createMinimap();
+const driftScore = createDriftScore();
+const soundSystem = createSoundSystem();
 
 // UI 요소
 const mapSelectUI = document.getElementById('map-select');
@@ -100,6 +108,14 @@ const controlsHint = document.getElementById('controls-hint');
 const speedValue = document.getElementById('speed-value');
 const hudVehicleName = document.getElementById('hud-vehicle-name');
 const topButtons = document.getElementById('top-buttons');
+const driftHud = document.getElementById('drift-hud');
+const driftScoreEl = document.getElementById('drift-score');
+const driftComboEl = document.getElementById('drift-combo');
+const driftTotalEl = document.getElementById('drift-total');
+const lapHud = document.getElementById('lap-hud');
+const lapTimeEl = document.getElementById('lap-time');
+const lapBestEl = document.getElementById('lap-best');
+const lapCountEl = document.getElementById('lap-count');
 
 // 맵 선택
 function selectMap(mapId) {
@@ -145,6 +161,28 @@ async function startGame(vehicleId) {
   controlsHint.style.display = 'block';
   topButtons.style.display = 'flex';
   minimap.show();
+  driftScore.reset();
+  driftHud.style.display = 'none';
+  soundSystem.resume();
+
+  // 서킷맵일 때만 랩 타이머 생성
+  if (currentMapId === 'circuit' && currentMap.checkpoints && currentMap.finishLine) {
+    lapTimer = createLapTimer(currentMap.checkpoints, currentMap.finishLine);
+    lapHud.style.display = 'block';
+  } else {
+    lapTimer = null;
+    lapHud.style.display = 'none';
+  }
+
+  // 도시맵일 때만 NPC 교통 생성
+  if (npcTraffic) {
+    npcTraffic.cleanup();
+    npcTraffic = null;
+  }
+  if (currentMapId === 'city' && currentMap.gridInfo) {
+    npcTraffic = createNPCTraffic(scene, world, currentMap.gridInfo);
+  }
+
   gameRunning = true;
   clock.getDelta();
 }
@@ -165,6 +203,8 @@ document.getElementById('btn-change').addEventListener('click', () => {
   hud.style.display = 'none';
   controlsHint.style.display = 'none';
   topButtons.style.display = 'none';
+  driftHud.style.display = 'none';
+  lapHud.style.display = 'none';
   minimap.hide();
   vehicleSelectUI.style.display = 'flex';
 });
@@ -175,6 +215,8 @@ document.getElementById('btn-change-map').addEventListener('click', () => {
   hud.style.display = 'none';
   controlsHint.style.display = 'none';
   topButtons.style.display = 'none';
+  driftHud.style.display = 'none';
+  lapHud.style.display = 'none';
   minimap.hide();
 
   // 차량 cleanup
@@ -182,6 +224,12 @@ document.getElementById('btn-change-map').addEventListener('click', () => {
     scene.remove(vehicleData.model);
     vehicleData.vehicle.removeFromWorld(world);
     vehicleData = null;
+  }
+
+  // NPC cleanup
+  if (npcTraffic) {
+    npcTraffic.cleanup();
+    npcTraffic = null;
   }
 
   // 맵 cleanup
@@ -209,6 +257,36 @@ function animate() {
     const mapInfo = currentMap?.update?.(delta, vehicleData.chassisBody);
     chaseCamera.update(vehicleData.chassisBody, mapInfo?.ceilingHeight);
 
+    // 드리프트 점수 업데이트
+    driftScore.update(vehicleData.chassisBody, delta);
+    const ds = driftScore.getState();
+    if (ds.isDrifting || ds.currentScore > 0) {
+      driftHud.style.display = 'block';
+      driftHud.classList.toggle('active', ds.isDrifting);
+      driftScoreEl.textContent = ds.currentScore;
+      driftComboEl.textContent = ds.combo > 1 ? `x${ds.combo} COMBO` : '';
+    } else {
+      driftHud.classList.remove('active');
+    }
+    driftTotalEl.textContent = ds.totalScore;
+
+    // 사운드 업데이트
+    soundSystem.update(vehicleData.getSpeed(), ds.isDrifting);
+
+    // 랩 타이머 업데이트
+    if (lapTimer) {
+      lapTimer.update(vehicleData.chassisBody, delta);
+      const ls = lapTimer.getState();
+      lapTimeEl.textContent = ls.currentTimeFormatted;
+      lapBestEl.textContent = ls.bestLapTime < Infinity ? `BEST ${ls.bestLapTimeFormatted}` : '';
+      lapCountEl.textContent = `LAP ${ls.lapCount} | CP ${ls.passedCheckpoints}/${ls.totalCheckpoints}`;
+    }
+
+    // NPC 교통 업데이트
+    if (npcTraffic) {
+      npcTraffic.update(delta, vehicleData.chassisBody.position);
+    }
+
     // HUD 업데이트
     speedValue.textContent = Math.round(vehicleData.getSpeed());
     minimap.update(vehicleData.chassisBody);
@@ -231,6 +309,13 @@ function animate() {
 }
 
 animate();
+
+// 소리 토글
+const btnSound = document.getElementById('btn-sound');
+btnSound.addEventListener('click', () => {
+  const muted = soundSystem.toggleMute();
+  btnSound.textContent = muted ? '🔇 소리' : '🔊 소리';
+});
 
 // 리사이즈
 window.addEventListener('resize', () => {

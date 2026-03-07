@@ -95,6 +95,7 @@ export function createCityMap(scene, world) {
     spawnPosition: { x: 0, y: 2, z: 0 },
     spawnRotation: 0,
     bounds: { minX: -HALF, maxX: HALF, minZ: -HALF, maxZ: HALF },
+    gridInfo: { GRID_SIZE, CELL, HALF },
     renderMinimapBackground(bgCtx, mapPx) {
       // 잔디 배경
       bgCtx.fillStyle = '#3a5c3f';
