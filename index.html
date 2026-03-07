@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>자동차 드라이빙</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
+    canvas { display: block; }
+
+    /* 맵 선택 오버레이 */
+    #map-select {
+      position: fixed; inset: 0;
+      background: linear-gradient(135deg, #0f9b8e 0%, #208b6c 50%, #1a6b4a 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 100;
+    }
+    #map-select h1 {
+      color: #fff; font-size: 2.5rem; margin-bottom: 0.5rem;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+    }
+    #map-select p {
+      color: rgba(255,255,255,0.8); font-size: 1.1rem; margin-bottom: 2rem;
+    }
+    .map-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem; max-width: 720px; padding: 0 1rem;
+    }
+    .map-card {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 20px; padding: 2rem 1.5rem;
+      text-align: center; cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+      color: #fff; min-width: 180px;
+    }
+    .map-card:hover {
+      transform: scale(1.08);
+      background: rgba(255,255,255,0.3);
+    }
+    .map-card .emoji { font-size: 3.5rem; margin-bottom: 0.6rem; }
+    .map-card .name { font-size: 1.3rem; font-weight: 700; }
+    .map-card .desc { font-size: 0.85rem; opacity: 0.8; margin-top: 0.3rem; }
+
+    /* 차량 선택 오버레이 */
+    #vehicle-select {
+      position: fixed; inset: 0;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: none; flex-direction: column;
+      align-items: center; justify-content: center;
+      z-index: 100;
+    }
+    #vehicle-select h1 {
+      color: #fff; font-size: 2.5rem; margin-bottom: 0.5rem;
+      text-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+    }
+    #vehicle-select p {
+      color: rgba(255,255,255,0.8); font-size: 1.1rem; margin-bottom: 2rem;
+    }
+    .vehicle-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem; max-width: 720px; padding: 0 1rem;
+    }
+    .vehicle-card {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(10px);
+      border: 2px solid rgba(255,255,255,0.3);
+      border-radius: 16px; padding: 1.2rem 1rem;
+      text-align: center; cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+      color: #fff;
+    }
+    .vehicle-card:hover {
+      transform: scale(1.08);
+      background: rgba(255,255,255,0.3);
+    }
+    .vehicle-card .emoji { font-size: 2.5rem; margin-bottom: 0.4rem; }
+    .vehicle-card .name { font-size: 1.1rem; font-weight: 700; }
+    .vehicle-card .desc { font-size: 0.8rem; opacity: 0.8; margin-top: 0.2rem; }
+
+    /* 속도계 HUD */
+    #hud {
+      display: none; position: fixed; bottom: 2rem; right: 2rem;
+      background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+      border-radius: 16px; padding: 1rem 1.5rem;
+      color: #fff; z-index: 50; text-align: center;
+      min-width: 120px;
+    }
+    #hud .speed-value { font-size: 2.5rem; font-weight: 700; line-height: 1; }
+    #hud .speed-unit { font-size: 0.9rem; opacity: 0.7; }
+    #hud .vehicle-name { font-size: 0.8rem; opacity: 0.6; margin-top: 0.3rem; }
+
+    /* 조작 안내 */
+    #controls-hint {
+      display: none; position: fixed; bottom: 2rem; left: 2rem;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+      border-radius: 12px; padding: 0.8rem 1rem;
+      color: rgba(255,255,255,0.8); font-size: 0.8rem;
+      z-index: 50; line-height: 1.6;
+    }
+
+    /* 상단 버튼 그룹 */
+    .top-buttons {
+      position: fixed; top: 1rem; left: 1rem;
+      display: none; gap: 0.5rem; z-index: 50;
+    }
+    .top-btn {
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+      border: 2px solid rgba(255,255,255,0.3); border-radius: 10px;
+      color: #fff; font-size: 0.85rem; padding: 0.5rem 0.8rem;
+      cursor: pointer;
+    }
+    .top-btn:hover { background: rgba(0,0,0,0.7); }
+  </style>
+</head>
+<body>
+  <!-- 맵 선택 UI -->
+  <div id="map-select">
+    <h1>어디서 달려볼까요?</h1>
+    <p>맵을 선택하세요</p>
+    <div class="map-grid">
+      <div class="map-card" data-map="city">
+        <div class="emoji">🏙️</div>
+        <div class="name">도시</div>
+        <div class="desc">건물과 주차장이 있는 도시</div>
+      </div>
+      <div class="map-card" data-map="suburban">
+        <div class="emoji">🛣️</div>
+        <div class="name">교외 도로</div>
+        <div class="desc">회전교차로, 터널, 긴 도로</div>
+      </div>
+      <div class="map-card" data-map="circuit">
+        <div class="emoji">🏎️</div>
+        <div class="name">F1 경주장</div>
+        <div class="desc">레이싱 서킷</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 차량 선택 UI -->
+  <div id="vehicle-select">
+    <h1>자동차를 골라보세요!</h1>
+    <p>방향키로 운전해요</p>
+    <div class="vehicle-grid">
+      <div class="vehicle-card" data-vehicle="Bike">
+        <div class="emoji">🏍️</div>
+        <div class="name">오토바이</div>
+        <div class="desc">빠르고 날쌔요</div>
+      </div>
+      <div class="vehicle-card" data-vehicle="Car_2">
+        <div class="emoji">🚗</div>
+        <div class="name">승용차</div>
+        <div class="desc">기본 자동차</div>
+      </div>
+      <div class="vehicle-card" data-vehicle="Porter_01">
+        <div class="emoji">🛻</div>
+        <div class="name">포터</div>
+        <div class="desc">작은 트럭</div>
+      </div>
+      <div class="vehicle-card" data-vehicle="HY_Truck_1">
+        <div class="emoji">🚚</div>
+        <div class="name">트럭</div>
+        <div class="desc">힘이 세요</div>
+      </div>
+      <div class="vehicle-card" data-vehicle="Bus_mid">
+        <div class="emoji">🚌</div>
+        <div class="name">중형 버스</div>
+        <div class="desc">사람을 많이 태워요</div>
+      </div>
+      <div class="vehicle-card" data-vehicle="Bus_big">
+        <div class="emoji">🚍</div>
+        <div class="name">대형 버스</div>
+        <div class="desc">아주 크고 무거워요</div>
+      </div>
+      <div class="vehicle-card" data-vehicle="Trailer_1">
+        <div class="emoji">🚛</div>
+        <div class="name">트레일러</div>
+        <div class="desc">제일 크고 느려요</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="speed-value" id="speed-value">0</div>
+    <div class="speed-unit">km/h</div>
+    <div class="vehicle-name" id="hud-vehicle-name"></div>
+  </div>
+
+  <!-- 상단 버튼 그룹 -->
+  <div class="top-buttons" id="top-buttons">
+    <button class="top-btn" id="btn-change-map">🗺️ 맵 변경</button>
+    <button class="top-btn" id="btn-change">🔄 차량 변경</button>
+  </div>
+
+  <!-- 조작 안내 -->
+  <div id="controls-hint">
+    ↑ / W 전진 &nbsp; ↓ / S 후진<br>
+    ← → / A D 방향 전환<br>
+    스페이스 : 리셋 &nbsp; 마우스 : 시점
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
