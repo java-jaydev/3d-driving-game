@@ -90,9 +90,9 @@ const bloomPass = new UnrealBloomPass(
     Math.floor(window.innerWidth / 2),
     Math.floor(window.innerHeight / 2)
   ),
-  0.3,   // strength
-  0.5,   // radius
-  0.85   // threshold
+  0.15,  // strength
+  0.3,   // radius
+  0.95   // threshold
 );
 composer.addPass(bloomPass);
 composer.addPass(new OutputPass());
