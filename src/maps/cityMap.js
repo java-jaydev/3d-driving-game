@@ -235,8 +235,8 @@ function addSpeedBump(tracker, x, z, length, rotated) {
 function addArrow(tracker, bx, bz) {
   const group = new THREE.Group();
 
-  const body = makePlane(0.3, 2.5, WHITE_MAT);
-  body.position.set(0, 0, -0.3);
+  const body = makePlane(0.3, 2.0, WHITE_MAT);
+  body.position.set(0, 0, -0.05);
   group.add(body);
 
   const headShape = new THREE.Shape();
